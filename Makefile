@@ -46,19 +46,12 @@
 # To rebuild project do "make clean" then "make all".
 #----------------------------------------------------------------------------
 
-# USB vendor ID (VID)
-# reuse of this VID by others is forbidden by USB-IF
-# official Arduino LLC VID
-# VID = 0x2341
+# USB vendor ID (VID) - The official pid.codes shared open Vendor ID.
+VID = 0x1209
 
 
-# USB product ID (PID)
-# official Leonardo PID
-# PID = 0x0036
-# official Micro PID
-# PID = 0x0037
-# official Esplora PID
-# PID = 0x003C
+# USB product ID (PID) - The Keyboardio Model 01 Bootloader PID
+PID = 0x2300
 
 # MCU name
 MCU = atmega32u4
