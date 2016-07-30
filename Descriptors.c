@@ -59,7 +59,7 @@ const USB_Descriptor_Device_t DeviceDescriptor =
 
 	.ManufacturerStrIndex   = 0x02,
 	.ProductStrIndex        = 0x01,
-	.SerialNumStrIndex      = NO_DESCRIPTOR,
+	.SerialNumStrIndex      = 0x03,
 
 	.NumberOfConfigurations = FIXED_NUM_CONFIGURATIONS
 };
@@ -215,6 +215,12 @@ const USB_Descriptor_String_t ManufNameString =
 	#endif
 };
 
+const USB_Descriptor_String_t SerialNumString = 
+{
+	.Header  = { .Size = USB_STRING_LEN(5), .Type = DTYPE_String},
+	.UnicodeString = L"HIDOO"
+};
+
 /** This function is called by the library when in device mode, and must be overridden (see LUFA library "USB Descriptors"
  *  documentation) by the application code so that the address and size of a requested descriptor can be given
  *  to the USB library. When the device receives a Get Descriptor request on the control endpoint, this function
@@ -255,6 +261,10 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
 			{
 				Address = &ManufNameString;
 				Size	= ManufNameString.Header.Size;
+			} else if (DescriptorNumber == DeviceDescriptor.SerialNumStrIndex) 
+			{
+				Address = &SerialNumString;
+				Size    = SerialNumString.Header.Size;
 			}
 
 			break;
