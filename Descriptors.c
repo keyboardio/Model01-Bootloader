@@ -213,8 +213,8 @@ const USB_Descriptor_String_t ManufNameString =
 
 const USB_Descriptor_String_t SerialNumString = 
 {
-	.Header  = { .Size = USB_STRING_LEN(10), .Type = DTYPE_String},
-	.UnicodeString = L"Keyboardio"
+	.Header  = { .Size = USB_STRING_LEN(6), .Type = DTYPE_String},
+	.UnicodeString = L"kbio01"
 };
 
 /** This function is called by the library when in device mode, and must be overridden (see LUFA library "USB Descriptors"
