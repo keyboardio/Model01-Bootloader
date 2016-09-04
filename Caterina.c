@@ -35,6 +35,7 @@
 
 #define  INCLUDE_FROM_CATERINA_C
 #include "Caterina.h"
+#include <avr/delay.h>
 
 /** Contains the current baud rate and other settings of the first virtual serial port. This must be retained as some
  *  operating systems will not open the port unless the settings can be set successfully.
@@ -134,7 +135,27 @@ int main(void)
 		// If it looks like an "accidental" watchdog reset then start the sketch.
 		StartSketch();
 	}
-	
+
+    // Check to see if the user is holding down the top left button, which is
+    // required to reprogram over USB - Ideally we'd only be doing this for
+    // 'jumped to bootloader', rather than also for the 1200 bps tickle reboot
+    
+    // Set our write pin to hot
+    
+    // Check our read pin
+    // Light up PF0 and read PF1
+    DDRF |= _BV(0);
+    PORTF |= _BV(0);
+    if (PINF & _BV(1) ) { // If we get a signal
+        _delay_ms(5); // debounce
+        if (! (PINF & _BV(1))) { // If we no longer get a signal, it was spurious
+            //turn off the pin we'd set to be hot.
+            PORTF ^= _BV(0);
+            // Start the sketch
+            StartSketch();
+        }
+    }
+
 	/* Setup hardware required for the bootloader */
 	SetupHardware();
 
