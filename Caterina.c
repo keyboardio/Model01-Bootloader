@@ -35,7 +35,7 @@
 
 #define  INCLUDE_FROM_CATERINA_C
 #include "Caterina.h"
-#include <avr/delay.h>
+#include <util/delay.h>
 
 /** Contains the current baud rate and other settings of the first virtual serial port. This must be retained as some
  *  operating systems will not open the port unless the settings can be set successfully.
@@ -105,6 +105,36 @@ void LEDPulse(void) {
         L_LED_ON();
 }
 
+
+void CheckReprogrammingKey(void) {
+
+    // Hold the ATTiny in reset, so it can't mess with this read
+    DDRC |= _BV(6);
+    PORTC &= ~_BV(6);
+
+    // Light up PF0 and read PF1
+
+    DDRF &= ~_BV(1); // make the col pin an input
+    DDRF |= _BV(0); // make the row pin an output
+    PORTF |= _BV(1); // turn on pullup
+    PORTF &= ~_BV(0); // make our output low
+
+    __asm__("nop"); // Just in case we need a moment to get the read, like on the ATTiny
+    if ( PINF & _BV(1)) { // If the pin is hot
+        _delay_ms(5); // debounce
+        if (PINF & _BV(1)) { // If it's still hot, no key was pressed
+            // Start the sketch
+            DDRC &= ~_BV(6); // Turn the ATTiny back on
+            StartSketch();
+        }
+   }
+    
+    DDRC &= ~_BV(6); // Turn the ATTiny back on
+}
+
+
+
+
 /** Main program entry point. This routine configures the hardware required by the bootloader, then continuously
  *  runs the bootloader processing routine until it times out or is instructed to exit.
  */
@@ -131,28 +161,13 @@ int main(void) {
     else if ((mcusr_state & (1<<WDRF)) && (bootKeyPtrVal != bootKey) && (pgm_read_word(0) != 0xFFFF)) {
         // If it looks like an "accidental" watchdog reset then start the sketch.
         StartSketch();
+    } else { // If it's not an external reset, it must be a triggered reset. So 
+             // Let's make sure the user is holding down the magic key.
+             // Otherwise, it's pretty easy to blow bad firmware onto the
+             // device.
+        CheckReprogrammingKey();
+
     }
-
-    // Check to see if the user is holding down the top left button, which is
-    // required to reprogram over USB - Ideally we'd only be doing this for
-    // 'jumped to bootloader', rather than also for the 1200 bps tickle reboot
-
-    // Set our write pin to hot
-
-    // Check our read pin
-    // Light up PF0 and read PF1
-    DDRF |= _BV(0);
-    PORTF |= _BV(0);
-    if (PINF & _BV(1) ) { // If we get a signal
-        _delay_ms(5); // debounce
-        if (! (PINF & _BV(1))) { // If we no longer get a signal, it was spurious
-            //turn off the pin we'd set to be hot.
-            PORTF ^= _BV(0);
-            // Start the sketch
-            StartSketch();
-        }
-    }
-
     /* Setup hardware required for the bootloader */
     SetupHardware();
 
