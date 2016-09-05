@@ -63,7 +63,6 @@ static bool RunBootloader = true;
 static uint8_t make_leds_black[] = {0x03,0x00,0x00,0x00};
 static uint8_t make_leds_blue[] = {0x04,0x03,0xff,0x00,0x00};
 static uint8_t make_leds_red[] = {0x04,0x03,0x00,0x00,0xff};
-static uint8_t make_leds_green[] = {0x04,0x03,0x00,0xff,0x00};
 static uint8_t run_leds_fast[] = { 0x06, 0x05};
 
 
@@ -473,7 +472,7 @@ void CDC_Task(void) {
     /* Read in the bootloader command (first byte sent from host) */
     uint8_t Command = FetchNextCommandByte();
 
-    i2c_send( ATTINY_I2C_ADDR, &make_leds_green[0], sizeof(make_leds_green));
+    i2c_send( ATTINY_I2C_ADDR, &make_leds_red[0], sizeof(make_leds_red));
 
     if (Command == 'E') {
         /* We nearly run out the bootloader timeout clock,
