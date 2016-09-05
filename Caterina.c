@@ -58,6 +58,15 @@ static uint32_t CurrAddress;
  */
 static bool RunBootloader = true;
 
+
+#define ATTINY_I2C_ADDR 0xB0
+static uint8_t make_leds_black[] = {0x03,0x00,0x00,0x00};
+static uint8_t make_leds_blue[] = {0x03,0xff,0x00,0x00};
+static uint8_t make_leds_red[] = {0x03,0x00,0x00,0xff};
+static uint8_t make_leds_green[] = {0x03,0x00,0xff,0x00};
+
+
+
 /* Bootloader timeout timer */
 #define TIMEOUT_PERIOD	8000
 uint16_t Timeout = 0;
@@ -113,6 +122,14 @@ void CheckReprogrammingKey(void) {
 
 
 
+void EnableLEDs(void) {
+    // Turn on power to the LED net
+    DDRC |= _BV(7);
+    PORTC |= _BV(7);
+
+    i2c_init();
+    i2c_send( ATTINY_I2C_ADDR, &make_leds_red[0], 4);
+} 
 
 /** Main program entry point. This routine configures the hardware required by the bootloader, then continuously
  *  runs the bootloader processing routine until it times out or is instructed to exit.
@@ -129,9 +146,9 @@ int main(void) {
     /* Watchdog may be configured with a 15 ms period so must disable it before going any further */
     wdt_disable();
 
-    i2c_init();
-    uint8_t data[] = {0x01, 0x02};
-    i2c_send( 0xb6, &data[0], 2);
+    // Set the LEDs to black, so they don't flash.
+    //i2c_send( ATTINY_I2C_ADDR, &make_leds_black[0], 4);
+    
 
 
     if ((mcusr_state & (1<<PORF)) && (pgm_read_word(0) != 0xFFFF)) {
@@ -201,6 +218,8 @@ void SetupHardware(void) {
     OCR1AL = 250;
     TIMSK1 = (1 << OCIE1A);					// enable timer 1 output compare A match interrupt
     TCCR1B = ((1 << CS11) | (1 << CS10));	// 1/64 prescaler on timer 1 input
+
+    EnableLEDs();
 
     /* Initialize USB Subsystem */
     USB_Init();
@@ -450,6 +469,8 @@ void CDC_Task(void) {
     /* Read in the bootloader command (first byte sent from host) */
     uint8_t Command = FetchNextCommandByte();
 
+    i2c_send( ATTINY_I2C_ADDR, &make_leds_green[0], 4);
+
     if (Command == 'E') {
         /* We nearly run out the bootloader timeout clock,
         * leaving just a few hundred milliseconds so the
@@ -602,6 +623,7 @@ void CDC_Task(void) {
         WriteNextResponseByte('?');
     }
 
+    i2c_send( ATTINY_I2C_ADDR, &make_leds_blue[0], 4);
 
     /* Select the IN endpoint */
     Endpoint_SelectEndpoint(CDC_TX_EPNUM);
