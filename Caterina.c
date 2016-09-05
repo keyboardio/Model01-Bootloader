@@ -129,6 +129,11 @@ int main(void) {
     /* Watchdog may be configured with a 15 ms period so must disable it before going any further */
     wdt_disable();
 
+    i2c_init();
+    uint8_t data[] = {0x01, 0x02};
+    i2c_send( 0xb6, &data[0], 2);
+
+
     if ((mcusr_state & (1<<PORF)) && (pgm_read_word(0) != 0xFFFF)) {
         // After a power-on reset skip the bootloader and jump straight to sketch
         // if one exists.
