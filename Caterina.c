@@ -61,10 +61,10 @@ static bool RunBootloader = true;
 
 #define ATTINY_I2C_ADDR 0xB0
 static uint8_t make_leds_black[] = {0x03,0x00,0x00,0x00};
-static uint8_t make_leds_blue[] = {0x03,0x80,0x00,0x00};
-static uint8_t make_leds_red[] = {0x03,0x00,0x00,0x80};
-static uint8_t make_leds_green[] = {0x03,0x00,0x80,0x00};
-
+static uint8_t make_leds_blue[] = {0x04,0x03,0xff,0x00,0x00};
+static uint8_t make_leds_red[] = {0x04,0x03,0x00,0x00,0xff};
+static uint8_t make_leds_green[] = {0x04,0x03,0x00,0xff,0x00};
+static uint8_t run_leds_fast[] = { 0x06, 0x05};
 
 
 /* Bootloader timeout timer */
@@ -128,7 +128,12 @@ void EnableLEDs(void) {
     PORTC |= _BV(7);
 
     i2c_init();
-    i2c_send( ATTINY_I2C_ADDR, &make_leds_red[0], 4);
+    _delay_ms(1);
+    i2c_send( ATTINY_I2C_ADDR, &make_leds_black[0], sizeof(make_leds_black));
+    _delay_ms(1);
+    i2c_send( ATTINY_I2C_ADDR, &make_leds_red[0], sizeof(make_leds_red));
+    _delay_ms(1);
+    i2c_send( ATTINY_I2C_ADDR, &run_leds_fast[0], sizeof(run_leds_fast));
 } 
 
 /** Main program entry point. This routine configures the hardware required by the bootloader, then continuously
@@ -147,7 +152,6 @@ int main(void) {
     wdt_disable();
 
     // Set the LEDs to black, so they don't flash.
-    //i2c_send( ATTINY_I2C_ADDR, &make_leds_black[0], 4);
     
 
 
@@ -469,7 +473,7 @@ void CDC_Task(void) {
     /* Read in the bootloader command (first byte sent from host) */
     uint8_t Command = FetchNextCommandByte();
 
-    i2c_send( ATTINY_I2C_ADDR, &make_leds_green[0], 4);
+    i2c_send( ATTINY_I2C_ADDR, &make_leds_green[0], sizeof(make_leds_green));
 
     if (Command == 'E') {
         /* We nearly run out the bootloader timeout clock,
@@ -623,7 +627,7 @@ void CDC_Task(void) {
         WriteNextResponseByte('?');
     }
 
-    i2c_send( ATTINY_I2C_ADDR, &make_leds_blue[0], 4);
+    i2c_send( ATTINY_I2C_ADDR, &make_leds_blue[0], sizeof(make_leds_blue));
 
     /* Select the IN endpoint */
     Endpoint_SelectEndpoint(CDC_TX_EPNUM);
