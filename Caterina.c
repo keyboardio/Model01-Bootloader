@@ -58,10 +58,13 @@ static uint32_t CurrAddress;
  */
 static bool RunBootloader = true;
 
-/* Pulse generation counters to keep track of the time remaining for each pulse type */
-#define TX_RX_LED_PULSE_PERIOD 100
-uint16_t TxLEDPulse = 0; // time remaining for Tx LED pulse
-uint16_t RxLEDPulse = 0; // time remaining for Rx LED pulse
+
+#define ATTINY_I2C_ADDR 0xB0
+static uint8_t make_leds_black[] = {0x03,0x00,0x00,0x00};
+static uint8_t make_leds_blue[] = {0x04,0x03,0xff,0x00,0x00};
+static uint8_t make_leds_red[] = {0x04,0x03,0x00,0x00,0xff};
+static uint8_t run_leds_fast[] = { 0x06, 0x05};
+
 
 /* Bootloader timeout timer */
 #define TIMEOUT_PERIOD	8000
@@ -83,26 +86,10 @@ void StartSketch(void) {
     MCUCR = (1 << IVCE);
     MCUCR = 0;
 
-    L_LED_OFF();
-    TX_LED_OFF();
-    RX_LED_OFF();
+
 
     /* jump to beginning of application space */
     __asm__ volatile("jmp 0x0000");
-}
-
-/*	Breathing animation on L LED indicates bootloader is running */
-uint16_t LLEDPulse;
-void LEDPulse(void) {
-    LLEDPulse++;
-    uint8_t p = LLEDPulse >> 8;
-    if (p > 127)
-        p = 254-p;
-    p += p;
-    if (((uint8_t)LLEDPulse) > p)
-        L_LED_OFF();
-    else
-        L_LED_ON();
 }
 
 
@@ -134,6 +121,19 @@ void CheckReprogrammingKey(void) {
 
 
 
+void EnableLEDs(void) {
+    // Turn on power to the LED net
+    DDRC |= _BV(7);
+    PORTC |= _BV(7);
+
+    i2c_init();
+    _delay_ms(1);
+    i2c_send( ATTINY_I2C_ADDR, &make_leds_black[0], sizeof(make_leds_black));
+    _delay_ms(1);
+    i2c_send( ATTINY_I2C_ADDR, &make_leds_red[0], sizeof(make_leds_red));
+    _delay_ms(1);
+    i2c_send( ATTINY_I2C_ADDR, &run_leds_fast[0], sizeof(run_leds_fast));
+} 
 
 /** Main program entry point. This routine configures the hardware required by the bootloader, then continuously
  *  runs the bootloader processing routine until it times out or is instructed to exit.
@@ -149,6 +149,10 @@ int main(void) {
 
     /* Watchdog may be configured with a 15 ms period so must disable it before going any further */
     wdt_disable();
+
+    // Set the LEDs to black, so they don't flash.
+    
+
 
     if ((mcusr_state & (1<<PORF)) && (pgm_read_word(0) != 0xFFFF)) {
         // After a power-on reset skip the bootloader and jump straight to sketch
@@ -183,7 +187,6 @@ int main(void) {
         if (Timeout > TIMEOUT_PERIOD)
             RunBootloader = false;
 
-        LEDPulse();
     }
 
     /* Disconnect from the host - USB interface will be reset later along with the AVR */
@@ -206,13 +209,9 @@ void SetupHardware(void) {
     MCUCR = (1 << IVCE);
     MCUCR = (1 << IVSEL);
 
-    LED_SETUP();
     CPU_PRESCALE(0);
-    L_LED_OFF();
-    TX_LED_OFF();
-    RX_LED_OFF();
 
-    /* Initialize TIMER1 to handle bootloader timeout and LED tasks.
+    /* Initialize TIMER1 to handle bootloader timeout tasks.
      * With 16 MHz clock and 1/64 prescaler, timer 1 is clocked at 250 kHz
      * Our chosen compare match generates an interrupt every 1 ms.
      * This interrupt is disabled selectively when doing memory reading, erasing,
@@ -223,6 +222,8 @@ void SetupHardware(void) {
     TIMSK1 = (1 << OCIE1A);					// enable timer 1 output compare A match interrupt
     TCCR1B = ((1 << CS11) | (1 << CS10));	// 1/64 prescaler on timer 1 input
 
+    EnableLEDs();
+
     /* Initialize USB Subsystem */
     USB_Init();
 }
@@ -232,12 +233,6 @@ ISR(TIMER1_COMPA_vect, ISR_BLOCK) {
     /* Reset counter */
     TCNT1H = 0;
     TCNT1L = 0;
-
-    /* Check whether the TX or RX LED one-shot period has elapsed.  if so, turn off the LED */
-    if (TxLEDPulse && !(--TxLEDPulse))
-        TX_LED_OFF();
-    if (RxLEDPulse && !(--RxLEDPulse))
-        RX_LED_OFF();
 
     if (pgm_read_word(0) != 0xFFFF)
         Timeout++;
@@ -447,8 +442,6 @@ static void WriteNextResponseByte(const uint8_t Response) {
     /* Write the next byte to the IN endpoint */
     Endpoint_Write_8(Response);
 
-    TX_LED_ON();
-    TxLEDPulse = TX_RX_LED_PULSE_PERIOD;
 }
 
 #define STK_OK              0x10
@@ -476,11 +469,10 @@ void CDC_Task(void) {
     if (!(Endpoint_IsOUTReceived()))
         return;
 
-    RX_LED_ON();
-    RxLEDPulse = TX_RX_LED_PULSE_PERIOD;
-
     /* Read in the bootloader command (first byte sent from host) */
     uint8_t Command = FetchNextCommandByte();
+
+    i2c_send( ATTINY_I2C_ADDR, &make_leds_red[0], sizeof(make_leds_red));
 
     if (Command == 'E') {
         /* We nearly run out the bootloader timeout clock,
@@ -634,6 +626,7 @@ void CDC_Task(void) {
         WriteNextResponseByte('?');
     }
 
+    i2c_send( ATTINY_I2C_ADDR, &make_leds_blue[0], sizeof(make_leds_blue));
 
     /* Select the IN endpoint */
     Endpoint_SelectEndpoint(CDC_TX_EPNUM);

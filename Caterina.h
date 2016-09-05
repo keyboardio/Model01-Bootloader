@@ -46,6 +46,7 @@
 #include <stdbool.h>
 
 #include "Descriptors.h"
+#include "i2c.h"
 
 #include <LUFA/Drivers/USB/USB.h>
 /* Macros: */
