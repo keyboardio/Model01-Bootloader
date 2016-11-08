@@ -1,6 +1,6 @@
 #include <i2c.h>
 #include <avr/io.h>
-
+#include <util/delay.h>
 #define TWI_START_TRANSMITTED     0x08
 #define TWI_SLAW_ACKED            0x18
 #define TWI_TXDATA_ACKED          0x28
@@ -22,7 +22,7 @@ inline uint8_t i2c_send_one (uint8_t data, uint8_t response) {
 
 uint8_t i2c_send( uint8_t address, uint8_t *data, uint8_t length ) {
       uint8_t error = 0;
-  
+      _delay_ms(1);  
       // START condition.
       TWCR = _BV(TWINT) | _BV(TWSTA) | _BV(TWEN);
       do {} while ((TWCR & _BV(TWINT)) == 0);
