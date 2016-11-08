@@ -187,12 +187,12 @@ const USB_Descriptor_String_t LanguageString = {
  *  Descriptor.
  */
 const USB_Descriptor_String_t ProductString = {
-    .Header                 = {.Size = USB_STRING_LEN(16), .Type = DTYPE_String},
+    .Header                 = {.Size = USB_STRING_LEN(9), .Type = DTYPE_String},
 
 #if DEVICE_PID == 0x2300
-    .UnicodeString          = L"Model 01        "
+    .UnicodeString          = L"Model 01 "
 #else
-    .UnicodeString			= L"USB IO board    "
+    .UnicodeString			= L"IO board "
 #endif
 };
 
