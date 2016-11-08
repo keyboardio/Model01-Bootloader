@@ -115,7 +115,7 @@ void CheckReprogrammingKey(void) {
             StartSketch();
         }
    }
-    
+    _delay_ms(5);   
     DDRC &= ~_BV(6); // Turn the ATTiny back on
 }
 
