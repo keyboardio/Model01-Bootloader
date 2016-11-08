@@ -127,11 +127,8 @@ void EnableLEDs(void) {
     PORTC |= _BV(7);
 
     i2c_init();
-    _delay_ms(1);
     i2c_send( ATTINY_I2C_ADDR, &make_leds_black[0], sizeof(make_leds_black));
-    _delay_ms(1);
     i2c_send( ATTINY_I2C_ADDR, &make_leds_red[0], sizeof(make_leds_red));
-    _delay_ms(1);
     i2c_send( ATTINY_I2C_ADDR, &run_leds_fast[0], sizeof(run_leds_fast));
 } 
 
