@@ -46,18 +46,15 @@ uint8_t i2c_send( uint8_t address, uint8_t *data, uint8_t length ) {
           }     
       }
   
-      // Send last data byte. Expect NACK.
+      // Send last data byte. 
       if (!error) {
           error = i2c_send_one(*bufferPtr,TWI_TXDATA_NACKED);
-          if (!error) {
-              TWCR = _BV(TWSTO) | _BV(TWINT) | _BV(TWEN);
-          }     
       }
   
-      // Abort communication if error.
-      if (error) {
-          TWCR = _BV(TWSTO) | _BV(TWINT) | _BV(TWEN);
-      }
+     // If there was an error, abort the communication
+     // If the last byte got sent successfully, expect a NAK
+     // Both of thse are the same signal
+     TWCR = _BV(TWSTO) | _BV(TWINT) | _BV(TWEN);
   
       return (!error);
   }
