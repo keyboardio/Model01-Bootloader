@@ -166,18 +166,17 @@ int main(void) {
     
 
 
-    if ((mcusr_state & (1<<PORF)) && (pgm_read_word(0) != 0xFFFF)) {
+    if (((mcusr_state & (1<<PORF))  // After power on reset
+	 || ((mcusr_state & (1<<WDRF)) && bootKeyPtrVal != bootKey )) // or an accidental watchdog reset
+	&& (pgm_read_word(0) != 0xFFFF)) {
         // After a power-on reset skip the bootloader and jump straight to sketch
         // if one exists.
+        // If it looks like an "accidental" watchdog reset then start the sketch.
         StartSketch();
     } else if (mcusr_state & (1<<EXTRF)) {
         // External reset -  we should continue to self-programming mode.
     }
-
-    else if ((mcusr_state & (1<<WDRF)) && (bootKeyPtrVal != bootKey) && (pgm_read_word(0) != 0xFFFF)) {
-        // If it looks like an "accidental" watchdog reset then start the sketch.
-        StartSketch();
-    } else { // If it's not an external reset, it must be a triggered reset. So 
+    else { // If it's not an external reset, it must be a triggered reset. So 
              // Let's make sure the user is holding down the magic key.
              // Otherwise, it's pretty easy to blow bad firmware onto the
              // device.
