@@ -60,10 +60,17 @@ static bool RunBootloader = true;
 
 
 #define ATTINY_I2C_ADDR 0xB0
+#define BLUE 0xFF,0x00,0x00
+#define RED 0x00, 0x00, 0xFF
+
+#define UPDATE_LED_CMD 0x04
+
 static uint8_t make_leds_black[] = {0x03,0x00,0x00,0x00};
-static uint8_t make_leds_blue[] = {0x04,0x03,0xff,0x00,0x00};
-static uint8_t make_leds_red[] = {0x04,0x03,0x00,0x00,0xff};
-static uint8_t run_leds_fast[] = { 0x06, 0x05};
+// static uint8_t make_leds_blue[] = {UPDATE_LED_CMD,0x03,BLUE };
+// static uint8_t make_leds_red[] = {UPDATE_LED_CMD,0x03,RED };
+// static uint8_t run_leds_fast[] = { 0x06, 0x05};
+
+static uint8_t progress_led = 24; // This is the LED on the "prog" key
 
 
 /* Bootloader timeout timer */
@@ -120,6 +127,13 @@ void CheckReprogrammingKey(void) {
 }
 
 
+void update_progress(void) {
+    i2c_send( ATTINY_I2C_ADDR, &make_leds_black[0], sizeof(make_leds_black));
+    // We bitshift the LED counter by 3 to slow it down a bit
+    uint8_t led_cmd[] = { UPDATE_LED_CMD, progress_led>>3  , RED };
+    if (progress_led++ >= 256) { progress_led = 0; }
+    i2c_send(ATTINY_I2C_ADDR, &led_cmd[0], sizeof(led_cmd));
+}
 
 void EnableLEDs(void) {
     // Turn on power to the LED net
@@ -127,10 +141,11 @@ void EnableLEDs(void) {
     PORTC |= _BV(7);
 
     i2c_init();
-    i2c_send( ATTINY_I2C_ADDR, &make_leds_black[0], sizeof(make_leds_black));
-    i2c_send( ATTINY_I2C_ADDR, &make_leds_red[0], sizeof(make_leds_red));
-    i2c_send( ATTINY_I2C_ADDR, &run_leds_fast[0], sizeof(run_leds_fast));
+    update_progress();
+//    i2c_send( ATTINY_I2C_ADDR, &run_leds_fast[0], sizeof(run_leds_fast));
 } 
+
+
 
 /** Main program entry point. This routine configures the hardware required by the bootloader, then continuously
  *  runs the bootloader processing routine until it times out or is instructed to exit.
@@ -469,7 +484,7 @@ void CDC_Task(void) {
     /* Read in the bootloader command (first byte sent from host) */
     uint8_t Command = FetchNextCommandByte();
 
-    i2c_send( ATTINY_I2C_ADDR, &make_leds_red[0], sizeof(make_leds_red));
+    update_progress();
 
     if (Command == 'E') {
         /* We nearly run out the bootloader timeout clock,
@@ -623,7 +638,8 @@ void CDC_Task(void) {
         WriteNextResponseByte('?');
     }
 
-    i2c_send( ATTINY_I2C_ADDR, &make_leds_blue[0], sizeof(make_leds_blue));
+    update_progress();
+
 
     /* Select the IN endpoint */
     Endpoint_SelectEndpoint(CDC_TX_EPNUM);
