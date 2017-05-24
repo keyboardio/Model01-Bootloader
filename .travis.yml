@@ -3,7 +3,6 @@ sudo: required
 os:
   - linux
 script:
-  - git submodule update --init --recursive
   - make
 notifications:
   irc:
@@ -21,5 +20,6 @@ cache:
 addons:
   apt:
     packages:
-    - arduino
+    - avr-libc
+    - gcc-avr
 
