@@ -1,0 +1,24 @@
+dist: trusty
+sudo: required
+os:
+  - linux
+script:
+  - make
+notifications:
+  irc:
+    channels:
+      - "chat.freenode.net#keyboardio"
+    use_notice: true
+    skip_join: true
+    template:
+      - "%{repository_name}/%{branch} %{commit} by %{author}: %{commit_subject} %{build_url} %{message}" 
+  email:
+    on_success: change
+    on_failure: change
+cache:
+  ccache: true
+addons:
+  apt:
+    packages:
+    - arduino
+
