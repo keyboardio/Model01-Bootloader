@@ -121,8 +121,8 @@ void CheckReprogrammingKey(void) {
             DDRC &= ~_BV(6); // Turn the ATTiny back on
             StartSketch();
         }
-   }
-    _delay_ms(5);   
+    }
+    _delay_ms(5);
     DDRC &= ~_BV(6); // Turn the ATTiny back on
 }
 
@@ -130,8 +130,10 @@ void CheckReprogrammingKey(void) {
 void update_progress(void) {
     i2c_send( ATTINY_I2C_ADDR, &make_leds_black[0], sizeof(make_leds_black));
     // We bitshift the LED counter by 3 to slow it down a bit
-    uint8_t led_cmd[] = { UPDATE_LED_CMD, progress_led>>3  , RED };
-    if (progress_led++ >= 256) { progress_led = 0; }
+    uint8_t led_cmd[] = { UPDATE_LED_CMD, progress_led>>3, RED };
+    if (progress_led++ >= 256) {
+        progress_led = 0;
+    }
     i2c_send(ATTINY_I2C_ADDR, &led_cmd[0], sizeof(led_cmd));
 }
 
@@ -143,7 +145,7 @@ void EnableLEDs(void) {
     i2c_init();
     update_progress();
 //    i2c_send( ATTINY_I2C_ADDR, &run_leds_fast[0], sizeof(run_leds_fast));
-} 
+}
 
 
 
@@ -163,23 +165,22 @@ int main(void) {
     wdt_disable();
 
     // Set the LEDs to black, so they don't flash.
-    
+
 
 
     if (((mcusr_state & (1<<PORF))  // After power on reset
-	 || ((mcusr_state & (1<<WDRF)) && bootKeyPtrVal != bootKey )) // or an accidental watchdog reset
-	&& (pgm_read_word(0) != 0xFFFF)) {
+            || ((mcusr_state & (1<<WDRF)) && bootKeyPtrVal != bootKey )) // or an accidental watchdog reset
+            && (pgm_read_word(0) != 0xFFFF)) {
         // After a power-on reset skip the bootloader and jump straight to sketch
         // if one exists.
         // If it looks like an "accidental" watchdog reset then start the sketch.
         StartSketch();
     } else if (mcusr_state & (1<<EXTRF)) {
         // External reset -  we should continue to self-programming mode.
-    }
-    else { // If it's not an external reset, it must be a triggered reset. So 
-             // Let's make sure the user is holding down the magic key.
-             // Otherwise, it's pretty easy to blow bad firmware onto the
-             // device.
+    } else { // If it's not an external reset, it must be a triggered reset. So
+        // Let's make sure the user is holding down the magic key.
+        // Otherwise, it's pretty easy to blow bad firmware onto the
+        // device.
         CheckReprogrammingKey();
 
     }
