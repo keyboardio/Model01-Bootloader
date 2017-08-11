@@ -169,8 +169,7 @@ int main(void) {
 
 
 
-    if (((mcusr_state & (1<<PORF))  // After power on reset
-            || ((mcusr_state & (1<<WDRF)) && bootKeyPtrVal != bootKey )) // or an accidental watchdog reset
+    if (( ((mcusr_state & (1<<WDRF)) && bootKeyPtrVal != bootKey )) // or an accidental watchdog reset
             && (pgm_read_word(0) != 0xFFFF)) {
         // After a power-on reset skip the bootloader and jump straight to sketch
         // if one exists.
