@@ -36,7 +36,7 @@ uint8_t i2c_send( uint8_t address, uint8_t *data, uint8_t length ) {
     // Send data bytes minus the last one. Expect ACK.
     const uint8_t * bufferPtr = data;
     if (!error) {
-        for (uint16_t i = (length-1); i >0 ; --i) {
+        for (uint8_t i = (length-1); i >0 ; --i) {
             error = i2c_send_one(*bufferPtr,TWI_TXDATA_ACKED);
             if (!error) {
                 ++bufferPtr;
