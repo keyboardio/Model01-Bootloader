@@ -74,7 +74,7 @@ static uint8_t progress_led = 24; // This is the LED on the "prog" key
 
 
 /* Bootloader timeout timer */
-#define TIMEOUT_PERIOD	8000
+#define TIMEOUT_PERIOD 32767	
 uint16_t Timeout = 0;
 
 uint16_t bootKey = 0x7777;
