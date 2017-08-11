@@ -81,7 +81,7 @@ uint16_t bootKey = 0x7777;
 volatile uint16_t *const bootKeyPtr = (volatile uint16_t *)0x0800;
 
 void StartSketch(void) {
-//    i2c_send( ATTINY_I2C_ADDR, &make_leds_black[0], sizeof(make_leds_black));
+    i2c_send( ATTINY_I2C_ADDR, &make_leds_black[0], sizeof(make_leds_black));
     cli();
 
     /* Undo TIMER1 setup and clear the count before running the sketch */
