@@ -168,8 +168,11 @@ int main(void) {
     // Set the LEDs to black, so they don't flash.
 
 
+    if (mcusr_state & (1<<PORF)) {
+        CheckReprogrammingKey();
 
-    if (( ((mcusr_state & (1<<WDRF)) && bootKeyPtrVal != bootKey )) // or an accidental watchdog reset
+    }
+    else if (((mcusr_state & (1<<WDRF)) && bootKeyPtrVal != bootKey ) // or an accidental watchdog reset
             && (pgm_read_word(0) != 0xFFFF)) {
         // After a power-on reset skip the bootloader and jump straight to sketch
         // if one exists.
