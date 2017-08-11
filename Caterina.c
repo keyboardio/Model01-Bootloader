@@ -138,7 +138,7 @@ void update_progress(void) {
     i2c_send(ATTINY_I2C_ADDR, &led_cmd[0], sizeof(led_cmd));
 }
 
-void EnableLEDs(void) {
+inline void EnableLEDs(void) {
     // Turn on power to the LED net
     DDRC |= _BV(7);
     PORTC |= _BV(7);
