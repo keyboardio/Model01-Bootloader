@@ -182,7 +182,7 @@ int main(void) {
         // External reset -  we should continue to self-programming mode.
     } else { // If it's not an external reset, it must be a triggered reset. So
         // Let's make sure the user is holding down the magic key.
-        // Otherwise, it's pretty easy to blow bad firmware onto the
+        // Otherwise, it's pretty easy to blow malicious firmware onto the
         // device.
         CheckReprogrammingKey();
 
