@@ -69,7 +69,7 @@ static uint8_t make_leds_black[] = {0x03,0x00,0x00,0x00};
 // static uint8_t make_leds_red[] = {UPDATE_LED_CMD,0x03,RED };
 // static uint8_t run_leds_fast[] = { 0x06, 0x05};
 
-static uint8_t progress_led = 24; // This is the LED on the "prog" key
+static uint8_t progress_led = 24; // This is the LED on the "prog" key, bitshifted by 3 bits
 
 
 /* Bootloader timeout timer */
