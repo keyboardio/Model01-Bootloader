@@ -132,7 +132,7 @@ void update_progress(void) {
     i2c_send( ATTINY_I2C_ADDR, &make_leds_black[0], sizeof(make_leds_black));
     // We bitshift the LED counter by 3 to slow it down a bit
     uint8_t led_cmd[] = { UPDATE_LED_CMD, progress_led>>3, RED };
-    if (progress_led++ >= 256) {
+    if (progress_led >= 256) {
         progress_led = 0;
     }
     i2c_send(ATTINY_I2C_ADDR, &led_cmd[0], sizeof(led_cmd));
@@ -144,7 +144,6 @@ inline void EnableLEDs(void) {
     PORTC |= _BV(7);
 
     i2c_init();
-    update_progress();
 //    i2c_send( ATTINY_I2C_ADDR, &run_leds_fast[0], sizeof(run_leds_fast));
 }
 
@@ -196,6 +195,7 @@ int main(void) {
     Timeout = 0;
 
     while (RunBootloader) {
+    	update_progress();
         CDC_Task();
         USB_USBTask();
         /* Time out and start the sketch if one is present */
@@ -487,7 +487,7 @@ void CDC_Task(void) {
     /* Read in the bootloader command (first byte sent from host) */
     uint8_t Command = FetchNextCommandByte();
 
-    update_progress();
+    progress_led++;
 
     if (Command == 'E') {
         /* We nearly run out the bootloader timeout clock,
@@ -641,7 +641,6 @@ void CDC_Task(void) {
         WriteNextResponseByte('?');
     }
 
-    update_progress();
 
 
     /* Select the IN endpoint */
