@@ -56,7 +56,6 @@ static uint32_t CurrAddress;
  *  via a watchdog reset. When cleared the bootloader will exit, starting the watchdog and entering an infinite
  *  loop until the AVR restarts and the application runs.
  */
-static bool RunBootloader = true;
 
 
 #define ATTINY_I2C_ADDR 0xB0
@@ -194,14 +193,11 @@ int main(void) {
 
     Timeout = 0;
 
-    while (RunBootloader) {
+        /* Time out and start the sketch if one is present */
+    while (Timeout < TIMEOUT_PERIOD) {
     	update_progress();
         CDC_Task();
         USB_USBTask();
-        /* Time out and start the sketch if one is present */
-        if (Timeout > TIMEOUT_PERIOD)
-            RunBootloader = false;
-
     }
 
     /* Disconnect from the host - USB interface will be reset later along with the AVR */
