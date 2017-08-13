@@ -20,7 +20,7 @@ inline uint8_t i2c_send_one (uint8_t data, uint8_t response) {
     return (TWSR != response);
 }
 
-uint8_t i2c_send( uint8_t address, uint8_t *data, uint8_t length ) {
+void i2c_send( uint8_t address, uint8_t *data, uint8_t length ) {
     uint8_t error = 0;
     _delay_ms(1);
     // START condition.
@@ -48,7 +48,7 @@ uint8_t i2c_send( uint8_t address, uint8_t *data, uint8_t length ) {
 
     // Send last data byte.
     if (!error) {
-        error = i2c_send_one(*bufferPtr,TWI_TXDATA_NACKED);
+        i2c_send_one(*bufferPtr,TWI_TXDATA_NACKED);
     }
 
     // If there was an error, abort the communication
@@ -56,5 +56,4 @@ uint8_t i2c_send( uint8_t address, uint8_t *data, uint8_t length ) {
     // Both of thse are the same signal
     TWCR = _BV(TWSTO) | _BV(TWINT) | _BV(TWEN);
 
-    return (!error);
 }
