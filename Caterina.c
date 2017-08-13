@@ -159,6 +159,8 @@ int main(void) {
     /* Watchdog may be configured with a 15 ms period so must disable it before going any further */
     wdt_disable();
 
+    /* Don't run the user application if the reset vector is blank (no app loaded) */
+    bool ApplicationValid = (pgm_read_word_near(0) != 0xFFFF);
 
 
     if (mcusr_state & (1<<PORF)) {
