@@ -112,7 +112,13 @@ void CheckReprogrammingKey(void) {
     PORTF |= _BV(1); // turn on pullup
     PORTF &= ~_BV(0); // make our output low
 
-    __asm__("nop"); // Just in case we need a moment to get the read, like on the ATTiny
+    // we need a moment to get the read, or we get some real weird behavior
+    // specifically, at random intervals, we end up in the bootloader on first boot
+    // even if the prog key isn't held down.
+    //
+    // I (jesse) believe that the issue is that we were getting our reads
+    // before the ATTiny had fully get reset
+    _delay_ms(5);
     if ( PINF & _BV(1)) { // If the pin is hot
         _delay_ms(5); // debounce
         if (PINF & _BV(1)) { // If it's still hot, no key was pressed
