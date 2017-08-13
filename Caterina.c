@@ -168,9 +168,9 @@ int main(void) {
     wdt_disable();
 
     i2c_init();
+
     // Set the LEDs to black, so they don't flash.
     TurnLEDsOff();
-    EnableLEDs();
 
 
     /* Don't run the user application if the reset vector is blank (no app loaded) */
@@ -208,7 +208,9 @@ int main(void) {
 
     Timeout = 0;
 
-        /* Time out and start the sketch if one is present */
+    EnableLEDs();
+
+    /* Time out and start the sketch if one is present */
     while (Timeout < TIMEOUT_PERIOD) {
         UpdateProgressLED();
         CDC_Task();
