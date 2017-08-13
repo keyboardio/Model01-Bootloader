@@ -131,7 +131,6 @@ static inline void CheckReprogrammingKey(void) {
 }
 
 
-    i2c_send( ATTINY_I2C_ADDR, &make_leds_black[0], sizeof(make_leds_black));
 static inline void UpdateProgressLED(void) {
     // We bitshift the LED counter by 3 to slow it down a bit
     uint8_t led_cmd[] = { UPDATE_LED_CMD, progress_led>>3, RED };
@@ -502,6 +501,7 @@ void CDC_Task(void) {
     /* Read in the bootloader command (first byte sent from host) */
     uint8_t Command = FetchNextCommandByte();
     
+    TurnLEDsOff();
     UpdateProgressLED();
     progress_led++;
 
