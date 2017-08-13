@@ -120,7 +120,7 @@ void CheckReprogrammingKey(void) {
     // before the ATTiny had fully get reset
     _delay_ms(5);
     if ( PINF & _BV(1)) { // If the pin is hot
-        _delay_ms(5); // debounce
+        _delay_ms(10); // debounce
         if (PINF & _BV(1)) { // If it's still hot, no key was pressed
             // Start the sketch
             DDRC &= ~_BV(6); // Turn the ATTiny back on
