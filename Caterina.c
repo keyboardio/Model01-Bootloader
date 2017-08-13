@@ -164,34 +164,39 @@ int main(void) {
     /* Watchdog may be configured with a 15 ms period so must disable it before going any further */
     wdt_disable();
 
+
     /* Don't run the user application if the reset vector is blank (no app loaded) */
     bool ApplicationValid = (pgm_read_word_near(0) != 0xFFFF);
 
-
-    if (mcusr_state & (1<<PORF)) {
-        CheckReprogrammingKey();
-
+    if (ApplicationValid) {
+        if (((mcusr_state & (1<<WDRF)) && bootKeyPtrVal != bootKey )) {
+            // If it looks like an "accidental" watchdog reset then start the sketch.
+            StartSketch();
+   	} else if (mcusr_state == _BV(EXTRF)) {
+        	// External reset -  we should continue to self-programming mode.
+		// Note that we're checking that mcusr_state is set ONLY to external reset
+		// The atmega32u4 will populate EXTRF on power on as well as an explicit 
+		// external reset condition
+		// If htis logic were "mcusr_state & _BV(EXTRF)", it would trigger on
+		// first boot...sometimes.
+		// That'd lead to the keyboard going into a lengthy bootloader phase
+		// when the user plugged it in
+		// We explicitly don't want to trigger this in the case of a watchdog reset,
+		// power on reset or a brownout reset.
+        } else { 
+	    // If it's not an external reset, it must be a triggered reset. So
+            // Let's make sure the user is holding down the magic key.
+            // Otherwise, it's pretty easy to blow malicious firmware onto the
+            // device.
+            CheckReprogrammingKey();
+        }
     }
-    else if (((mcusr_state & (1<<WDRF)) && bootKeyPtrVal != bootKey ) // or an accidental watchdog reset
-            && (pgm_read_word(0) != 0xFFFF)) {
-        // After a power-on reset skip the bootloader and jump straight to sketch
-        // if one exists.
-        // If it looks like an "accidental" watchdog reset then start the sketch.
-        StartSketch();
-    } else if (mcusr_state & (1<<EXTRF)) {
-        // External reset -  we should continue to self-programming mode.
-    } else { // If it's not an external reset, it must be a triggered reset. So
-        // Let's make sure the user is holding down the magic key.
-        // Otherwise, it's pretty easy to blow malicious firmware onto the
-        // device.
-        CheckReprogrammingKey();
 
-    }
-    }
     // Set the LEDs to black, so they don't flash.
     i2c_init();
     i2c_send( ATTINY_I2C_ADDR, &make_leds_black[0], sizeof(make_leds_black));
     EnableLEDs();
+
     
     /* Setup hardware required for the bootloader */
     SetupHardware();
