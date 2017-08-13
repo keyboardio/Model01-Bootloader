@@ -146,7 +146,7 @@ static inline void EnableLEDs(void) {
     PORTC |= _BV(7);
 }
 
-static inline void TurnLEDsOff(void) {
+__attribute__ ((noinline)) static void TurnLEDsOff(void) {
     i2c_send( ATTINY_I2C_ADDR, &make_leds_black[0], sizeof(make_leds_black));
 
 }
