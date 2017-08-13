@@ -131,8 +131,8 @@ static inline void CheckReprogrammingKey(void) {
 }
 
 
-static inline void update_progress(void) {
     i2c_send( ATTINY_I2C_ADDR, &make_leds_black[0], sizeof(make_leds_black));
+static inline void UpdateProgressLED(void) {
     // We bitshift the LED counter by 3 to slow it down a bit
     uint8_t led_cmd[] = { UPDATE_LED_CMD, progress_led>>3, RED };
     if (progress_led >= 256) {
@@ -212,7 +212,7 @@ int main(void) {
 
         /* Time out and start the sketch if one is present */
     while (Timeout < TIMEOUT_PERIOD) {
-    	update_progress();
+        UpdateProgressLED();
         CDC_Task();
         USB_USBTask();
     }
@@ -501,7 +501,8 @@ void CDC_Task(void) {
 
     /* Read in the bootloader command (first byte sent from host) */
     uint8_t Command = FetchNextCommandByte();
-
+    
+    UpdateProgressLED();
     progress_led++;
 
     if (Command == 'E') {
