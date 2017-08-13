@@ -140,8 +140,6 @@ static inline void EnableLEDs(void) {
     // Turn on power to the LED net
     DDRC |= _BV(7);
     PORTC |= _BV(7);
-
-    i2c_init();
 }
 
 
@@ -183,6 +181,12 @@ int main(void) {
         CheckReprogrammingKey();
 
     }
+    }
+    // Set the LEDs to black, so they don't flash.
+    i2c_init();
+    i2c_send( ATTINY_I2C_ADDR, &make_leds_black[0], sizeof(make_leds_black));
+    EnableLEDs();
+    
     /* Setup hardware required for the bootloader */
     SetupHardware();
 
@@ -234,7 +238,6 @@ void SetupHardware(void) {
     TIMSK1 = (1 << OCIE1A);					// enable timer 1 output compare A match interrupt
     TCCR1B = ((1 << CS11) | (1 << CS10));	// 1/64 prescaler on timer 1 input
 
-    EnableLEDs();
 
     /* Initialize USB Subsystem */
     USB_Init();
