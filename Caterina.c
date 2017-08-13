@@ -99,7 +99,7 @@ void StartSketch(void) {
 }
 
 
-void CheckReprogrammingKey(void) {
+static inline void CheckReprogrammingKey(void) {
 
     // Hold the ATTiny in reset, so it can't mess with this read
     DDRC |= _BV(6);
