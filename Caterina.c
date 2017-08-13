@@ -180,25 +180,26 @@ int main(void) {
         if (((mcusr_state & (1<<WDRF)) && bootKeyPtrVal != bootKey )) {
             // If it looks like an "accidental" watchdog reset then start the sketch.
             StartSketch();
-   	} else if (mcusr_state == _BV(EXTRF)) {
-        	// External reset -  we should continue to self-programming mode.
-		// Note that we're checking that mcusr_state is set ONLY to external reset
-		// The atmega32u4 will populate EXTRF on power on as well as an explicit 
-		// external reset condition
-		// If htis logic were "mcusr_state & _BV(EXTRF)", it would trigger on
-		// first boot...sometimes.
-		// That'd lead to the keyboard going into a lengthy bootloader phase
-		// when the user plugged it in
-		// We explicitly don't want to trigger this in the case of a watchdog reset,
-		// power on reset or a brownout reset.
-        } else { 
-	    // If it's not an external reset, it must be a triggered reset. So
+        } else if (mcusr_state == _BV(EXTRF)) {
+            // External reset -  we should continue to self-programming mode.
+            // Note that we're checking that mcusr_state is set ONLY to external reset
+            // The atmega32u4 will populate EXTRF on power on as well as an explicit
+            // external reset condition
+            // If htis logic were "mcusr_state & _BV(EXTRF)", it would trigger on
+            // first boot...sometimes.
+            // That'd lead to the keyboard going into a lengthy bootloader phase
+            // when the user plugged it in
+            // We explicitly don't want to trigger this in the case of a watchdog reset,
+            // power on reset or a brownout reset.
+        } else {
+            // If it's not an external reset, it must be a triggered reset. So
             // Let's make sure the user is holding down the magic key.
             // Otherwise, it's pretty easy to blow malicious firmware onto the
             // device.
             CheckReprogrammingKey();
         }
     }
+
 
     /* Setup hardware required for the bootloader */
     SetupHardware();
@@ -216,7 +217,7 @@ int main(void) {
         CDC_Task();
         USB_USBTask();
     }
-    
+
     /* Wait a short time to end all USB transactions and then disconnect */
     _delay_us(1000);
 
@@ -501,7 +502,7 @@ void CDC_Task(void) {
 
     /* Read in the bootloader command (first byte sent from host) */
     uint8_t Command = FetchNextCommandByte();
-    
+
     TurnLEDsOff();
     UpdateProgressLED();
     progress_led++;
