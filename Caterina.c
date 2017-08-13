@@ -164,6 +164,11 @@ int main(void) {
     /* Watchdog may be configured with a 15 ms period so must disable it before going any further */
     wdt_disable();
 
+    // Set the LEDs to black, so they don't flash.
+    i2c_init();
+    i2c_send( ATTINY_I2C_ADDR, &make_leds_black[0], sizeof(make_leds_black));
+    EnableLEDs();
+
 
     /* Don't run the user application if the reset vector is blank (no app loaded) */
     bool ApplicationValid = (pgm_read_word_near(0) != 0xFFFF);
@@ -191,11 +196,6 @@ int main(void) {
             CheckReprogrammingKey();
         }
     }
-
-    // Set the LEDs to black, so they don't flash.
-    i2c_init();
-    i2c_send( ATTINY_I2C_ADDR, &make_leds_black[0], sizeof(make_leds_black));
-    EnableLEDs();
 
     
     /* Setup hardware required for the bootloader */
