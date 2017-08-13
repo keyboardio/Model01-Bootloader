@@ -123,12 +123,12 @@ void CheckReprogrammingKey(void) {
         _delay_ms(10); // debounce
         if (PINF & _BV(1)) { // If it's still hot, no key was pressed
             // Start the sketch
-            DDRC &= ~_BV(6); // Turn the ATTiny back on
+            PORTC |= _BV(6); // Turn the ATTiny back on
             StartSketch();
         }
     }
     _delay_ms(5);
-    DDRC &= ~_BV(6); // Turn the ATTiny back on
+    PORTC |= _BV(6); // Turn the ATTiny back on
 }
 
 
