@@ -159,7 +159,6 @@ int main(void) {
     /* Watchdog may be configured with a 15 ms period so must disable it before going any further */
     wdt_disable();
 
-    // Set the LEDs to black, so they don't flash.
 
 
     if (mcusr_state & (1<<PORF)) {
