@@ -131,7 +131,7 @@ void CheckReprogrammingKey(void) {
 }
 
 
-void update_progress(void) {
+static inline void update_progress(void) {
     i2c_send( ATTINY_I2C_ADDR, &make_leds_black[0], sizeof(make_leds_black));
     // We bitshift the LED counter by 3 to slow it down a bit
     uint8_t led_cmd[] = { UPDATE_LED_CMD, progress_led>>3, RED };
