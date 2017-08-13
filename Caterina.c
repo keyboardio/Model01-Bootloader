@@ -200,7 +200,6 @@ int main(void) {
         }
     }
 
-    
     /* Setup hardware required for the bootloader */
     SetupHardware();
 
