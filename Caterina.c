@@ -127,7 +127,6 @@ void CheckReprogrammingKey(void) {
             StartSketch();
         }
     }
-    _delay_ms(5);
     PORTC |= _BV(6); // Turn the ATTiny back on
 }
 
