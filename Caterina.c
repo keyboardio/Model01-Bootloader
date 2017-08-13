@@ -147,6 +147,10 @@ static inline void EnableLEDs(void) {
     PORTC |= _BV(7);
 }
 
+static inline void TurnLEDsOff(void) {
+    i2c_send( ATTINY_I2C_ADDR, &make_leds_black[0], sizeof(make_leds_black));
+
+}
 
 
 /** Main program entry point. This routine configures the hardware required by the bootloader, then continuously
@@ -164,9 +168,9 @@ int main(void) {
     /* Watchdog may be configured with a 15 ms period so must disable it before going any further */
     wdt_disable();
 
-    // Set the LEDs to black, so they don't flash.
     i2c_init();
-    i2c_send( ATTINY_I2C_ADDR, &make_leds_black[0], sizeof(make_leds_black));
+    // Set the LEDs to black, so they don't flash.
+    TurnLEDsOff();
     EnableLEDs();
 
 
