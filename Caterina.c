@@ -177,10 +177,20 @@ int main(void) {
     bool ApplicationValid = (pgm_read_word_near(0) != 0xFFFF);
 
     if (ApplicationValid) {
-        if (((mcusr_state & (1<<WDRF)) && bootKeyPtrVal != bootKey )) {
-            // If it looks like an "accidental" watchdog reset then start the sketch.
-            StartSketch();
-        } else if (mcusr_state == _BV(EXTRF)) {
+	    // This guard code appears to descend from LUFA's HWB support, but is only partially implemented
+	    // At the same time, the logic doesn't match the lufa version of the logic
+	    //  We saw it getting triggered in Kaleidoscope and it led to the undesirable
+	    //  behavior of making it impossible to reboot to the bootloader
+	 	
+	    // Since our behavior is that now we will reboot into the user program
+	    // unless the 'prog' key is held, it seems safe to disable this code path 
+	   
+        // 	//If it looks like an "accidental" watchdog reset then start the sketch.
+   	//     if (((mcusr_state & (1<<WDRF)) && bootKeyPtrVal != bootKey )) {
+    	//        StartSketch();
+   	//     } else 
+		
+	if (mcusr_state == _BV(EXTRF)) {
             // External reset -  we should continue to self-programming mode.
             // Note that we're checking that mcusr_state is set ONLY to external reset
             // The atmega32u4 will populate EXTRF on power on as well as an explicit
