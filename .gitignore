@@ -1,0 +1,9 @@
+*.o
+*.lst
+/Caterina.eep
+/Caterina.elf
+/Caterina.hex
+/Caterina.lss
+/Caterina.sym
+/Caterina.map
+/.dep
