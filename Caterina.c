@@ -79,6 +79,10 @@ uint16_t Timeout = 0;
 uint16_t bootKey = 0x7777;
 volatile uint16_t *const bootKeyPtr = (volatile uint16_t *)0x0800;
 
+__attribute__ ((noinline)) static void TurnLEDsOff(void) {
+  i2c_send( ATTINY_I2C_ADDR, &make_leds_black[0], sizeof(make_leds_black));
+}
+
 void StartSketch(void) {
     cli();
 
@@ -92,7 +96,7 @@ void StartSketch(void) {
     MCUCR = (1 << IVCE);
     MCUCR = 0;
 
-
+    TurnLEDsOff();
 
     /* jump to beginning of application space */
     __asm__ volatile("jmp 0x0000");
@@ -145,12 +149,6 @@ static inline void EnableLEDs(void) {
     DDRC |= _BV(7);
     PORTC |= _BV(7);
 }
-
-__attribute__ ((noinline)) static void TurnLEDsOff(void) {
-    i2c_send( ATTINY_I2C_ADDR, &make_leds_black[0], sizeof(make_leds_black));
-
-}
-
 
 /** Main program entry point. This routine configures the hardware required by the bootloader, then continuously
  *  runs the bootloader processing routine until it times out or is instructed to exit.
