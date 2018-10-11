@@ -99,7 +99,7 @@ void StartSketch(void) {
 }
 
 
-static inline void CheckReprogrammingKey(void) {
+static bool CheckReprogrammingKey(void) {
 
     // Hold the ATTiny in reset, so it can't mess with this read
     DDRC |= _BV(6);
@@ -124,10 +124,11 @@ static inline void CheckReprogrammingKey(void) {
         if (PINF & _BV(1)) { // If it's still hot, no key was pressed
             // Start the sketch
             PORTC |= _BV(6); // Turn the ATTiny back on
-            StartSketch();
+            return false;
         }
     }
     PORTC |= _BV(6); // Turn the ATTiny back on
+    return true;
 }
 
 
@@ -206,7 +207,8 @@ int main(void) {
             // Let's make sure the user is holding down the magic key.
             // Otherwise, it's pretty easy to blow malicious firmware onto the
             // device.
-            CheckReprogrammingKey();
+            if (!CheckReprogrammingKey())
+                StartSketch();
         }
     }
 
@@ -226,6 +228,8 @@ int main(void) {
         UpdateProgressLED();
         CDC_Task();
         USB_USBTask();
+        if (CheckReprogrammingKey())
+            Timeout = 0;
     }
 
     /* Wait a short time to end all USB transactions and then disconnect */
