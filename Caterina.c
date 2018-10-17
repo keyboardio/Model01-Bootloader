@@ -452,7 +452,7 @@ void CDC_Task(void) {
     UpdateProgressLED();
     progress_led++;
 
-    if (Command == 'E') {
+    if (Command == AVR109_COMMAND_ExitBootloader) {
         /* We nearly run out the bootloader timeout clock,
         * leaving just a few hundred milliseconds so the
         * bootloder has time to respond and service any
@@ -465,43 +465,44 @@ void CDC_Task(void) {
 
         // Send confirmation byte back to the host
         WriteNextResponseByte('\r');
-    } else if (Command == 'T') {
+} else if ((Command == AVR109_COMMAND_SetLED) || (Command == AVR109_COMMAND_ClearLED) ||
+               (Command == AVR109_COMMAND_SelectDeviceType)) {
         FetchNextCommandByte();
 
         // Send confirmation byte back to the host
         WriteNextResponseByte('\r');
-    } else if ((Command == 'L') || (Command == 'P')) {
+    } else if ((Command == AVR109_COMMAND_EnterProgrammingMode) || (Command == AVR109_COMMAND_LeaveProgrammingMode)) {
         // Send confirmation byte back to the host
         WriteNextResponseByte('\r');
-    } else if (Command == 't') {
+    } else if (Command == AVR109_COMMAND_ReadPartCode) {
         // Return ATMEGA128 part code - this is only to allow AVRProg to use the bootloader
         WriteNextResponseByte(0x44);
         WriteNextResponseByte(0x00);
-    } else if (Command == 'a') {
+    } else if (Command == AVR109_COMMAND_ReadAutoAddressIncrement) {
         // Indicate auto-address increment is supported
         WriteNextResponseByte('Y');
-    } else if (Command == 'A') {
+    } else if (Command == AVR109_COMMAND_SetCurrentAddress) {
         // Set the current address to that given by the host
         CurrAddress   = (FetchNextCommandByte() << 9);
         CurrAddress  |= (FetchNextCommandByte() << 1);
 
         // Send confirmation byte back to the host
         WriteNextResponseByte('\r');
-    } else if (Command == 'p') {
+    } else if (Command == AVR109_COMMAND_ReadBootloaderInterface) {
         // Indicate serial programmer back to the host
         WriteNextResponseByte('S');
-    } else if (Command == 'S') {
+    } else if (Command == AVR109_COMMAND_ReadBootloaderIdentifier) {
         // Write the 7-byte software identifier to the endpoint
         for (uint8_t CurrByte = 0; CurrByte < 7; CurrByte++)
             WriteNextResponseByte(SOFTWARE_IDENTIFIER[CurrByte]);
-    } else if (Command == 'V') {
+    } else if (Command == AVR109_COMMAND_ReadBootloaderSWVersion) {
         WriteNextResponseByte('0' + BOOTLOADER_VERSION_MAJOR);
         WriteNextResponseByte('0' + BOOTLOADER_VERSION_MINOR);
     } else if (Command == 's') {
         WriteNextResponseByte(AVR_SIGNATURE_3);
         WriteNextResponseByte(AVR_SIGNATURE_2);
         WriteNextResponseByte(AVR_SIGNATURE_1);
-    } else if (Command == 'e') {
+    } else if (Command == AVR109_COMMAND_EraseFLASH) {
         // Clear the application section of flash
         for (uint32_t CurrFlashAddress = 0; CurrFlashAddress < BOOT_START_ADDR; CurrFlashAddress += SPM_PAGESIZE) {
             boot_page_erase(CurrFlashAddress);
@@ -514,7 +515,7 @@ void CDC_Task(void) {
         WriteNextResponseByte('\r');
     }
 #if !defined(NO_LOCK_BYTE_WRITE_SUPPORT)
-    else if (Command == 'l') {
+    else if (Command == AVR109_COMMAND_WriteLockbits) {
         // Set the lock bits to those given by the host
         boot_lock_bits_set(FetchNextCommandByte());
 
@@ -522,23 +523,23 @@ void CDC_Task(void) {
         WriteNextResponseByte('\r');
     }
 #endif
-    else if (Command == 'r') {
+    else if (Command == AVR109_COMMAND_ReadLockbits) {
         WriteNextResponseByte(boot_lock_fuse_bits_get(GET_LOCK_BITS));
-    } else if (Command == 'F') {
+    } else if (Command == AVR109_COMMAND_ReadLowFuses) {
         WriteNextResponseByte(boot_lock_fuse_bits_get(GET_LOW_FUSE_BITS));
-    } else if (Command == 'N') {
+    } else if (Command == AVR109_COMMAND_ReadHighFuses) {
         WriteNextResponseByte(boot_lock_fuse_bits_get(GET_HIGH_FUSE_BITS));
-    } else if (Command == 'Q') {
+    } else if (Command == AVR109_COMMAND_ReadExtendedFuses) {
         WriteNextResponseByte(boot_lock_fuse_bits_get(GET_EXTENDED_FUSE_BITS));
     }
 #if !defined(NO_BLOCK_SUPPORT)
-    else if (Command == 'b') {
+    else if (Command == AVR109_COMMAND_GetBlockWriteSupport) {
         WriteNextResponseByte('Y');
 
         // Send block size to the host
         WriteNextResponseByte(SPM_PAGESIZE >> 8);
         WriteNextResponseByte(SPM_PAGESIZE & 0xFF);
-    } else if ((Command == 'B') || (Command == 'g')) {
+    } else if ((Command == AVR109_COMMAND_BlockWrite) || (Command == AVR109_COMMAND_BlockRead)) {
         // Keep resetting the timeout counter if we're receiving self-programming instructions
         Timeout = 0;
         // Delegate the block write/read to a separate function for clarity
@@ -546,13 +547,13 @@ void CDC_Task(void) {
     }
 #endif
 #if !defined(NO_FLASH_BYTE_SUPPORT)
-    else if (Command == 'C') {
+    else if (Command == AVR109_COMMAND_FillFlashPageWordHigh) {
         // Write the high byte to the current flash page
         boot_page_fill(CurrAddress, FetchNextCommandByte());
 
         // Send confirmation byte back to the host
         WriteNextResponseByte('\r');
-    } else if (Command == 'c') {
+    } else if (Command == AVR109_COMMAND_FillFlashPageWordLow) {
         // Write the low byte to the current flash page
         boot_page_fill(CurrAddress | 0x01, FetchNextCommandByte());
 
@@ -561,7 +562,7 @@ void CDC_Task(void) {
 
         // Send confirmation byte back to the host
         WriteNextResponseByte('\r');
-    } else if (Command == 'm') {
+    } else if (Command == AVR109_COMMAND_WriteFlashPage) {
         // Commit the flash page to memory
         boot_page_write(CurrAddress);
 
@@ -570,7 +571,7 @@ void CDC_Task(void) {
 
         // Send confirmation byte back to the host
         WriteNextResponseByte('\r');
-    } else if (Command == 'R') {
+    } else if (Command == AVR109_COMMAND_ReadFLASHWord) {
 #if (FLASHEND > 0xFFFF)
         uint16_t ProgramWord = pgm_read_word_far(CurrAddress);
 #else
@@ -582,7 +583,7 @@ void CDC_Task(void) {
     }
 #endif
 #if !defined(NO_EEPROM_BYTE_SUPPORT)
-    else if (Command == 'D') {
+    else if (Command == AVR109_COMMAND_WriteEEPROM) {
         // Read the byte from the endpoint and write it to the EEPROM
         eeprom_write_byte((uint8_t*)((intptr_t)(CurrAddress >> 1)), FetchNextCommandByte());
 
@@ -591,7 +592,7 @@ void CDC_Task(void) {
 
         // Send confirmation byte back to the host
         WriteNextResponseByte('\r');
-    } else if (Command == 'd') {
+    } else if (Command == AVR109_COMMAND_ReadEEPROM) {
         // Read the EEPROM byte and write it to the endpoint
         WriteNextResponseByte(eeprom_read_byte((uint8_t*)((intptr_t)(CurrAddress >> 1))));
 
@@ -599,7 +600,7 @@ void CDC_Task(void) {
         CurrAddress += 2;
     }
 #endif
-    else if (Command != 27) {
+    else if (Command != AVR109_COMMAND_Sync) {
         // Unknown (non-sync) command, return fail code
         WriteNextResponseByte('?');
     }
