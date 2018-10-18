@@ -64,10 +64,10 @@ __attribute__ ((noinline)) static void TurnLEDsOff(void) {
 
 
 void InitLEDController() {
-i2c_init();
+    i2c_init();
 
     // Set the LEDs to black, so they don't flash.
     TurnLEDsOff();
 
 }
-    
+
