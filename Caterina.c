@@ -57,12 +57,8 @@ static uint32_t CurrAddress;
  *  loop until the AVR restarts and the application runs.
  */
 
+bool RunBootloader = true;
 
-
-
-/* Bootloader timeout timer */
-#define TIMEOUT_PERIOD 30000
-uint16_t Timeout = 0;
 
 uint16_t bootKey = 0x7777;
 volatile uint16_t *const bootKeyPtr = (volatile uint16_t *)0x0800;
@@ -152,12 +148,10 @@ int main(void) {
     /* Enable global interrupts so that the USB stack can function */
     sei();
 
-    Timeout = 0;
 
-    EnableLEDs();
 
     /* Time out and start the sketch if one is present */
-    while (Timeout < TIMEOUT_PERIOD) {
+    while (RunBootloader) {
         UpdateProgressLED();
         CDC_Task();
         USB_USBTask();
@@ -174,7 +168,7 @@ int main(void) {
 }
 
 /** Configures all hardware required for the bootloader. */
-static void SetupHardware(void) {
+void SetupHardware(void) {
     /* Disable watchdog if enabled by bootloader/fuses */
     MCUSR &= ~(1 << WDRF);
     wdt_disable();
@@ -186,7 +180,13 @@ static void SetupHardware(void) {
     MCUCR = (1 << IVCE);
     MCUCR = (1 << IVSEL);
 
-    CPU_PRESCALE(0);
+    
+    /* Initialize USB Subsystem */
+    USB_Init();
+    LEDs_Init();
+
+
+CPU_PRESCALE(0);
 
     /* Initialize TIMER1 to handle bootloader timeout tasks.
      * With 16 MHz clock and 1/64 prescaler, timer 1 is clocked at 250 kHz
@@ -194,24 +194,13 @@ static void SetupHardware(void) {
      * This interrupt is disabled selectively when doing memory reading, erasing,
      * or writing since SPM has tight timing requirements.
      */
-    OCR1AH = 0;
-    OCR1AL = 250;
+ 
+
     TIMSK1 = (1 << OCIE1A);					// enable timer 1 output compare A match interrupt
     TCCR1B = ((1 << CS11) | (1 << CS10));	// 1/64 prescaler on timer 1 input
 
 
-    /* Initialize USB Subsystem */
-    USB_Init();
-}
 
-//uint16_t ctr = 0;
-ISR(TIMER1_COMPA_vect, ISR_BLOCK) {
-    /* Reset counter */
-    TCNT1H = 0;
-    TCNT1L = 0;
-
-    if (pgm_read_word(0) != 0xFFFF)
-        Timeout++;
 }
 
 /** Event handler for the USB_ConfigurationChanged event. This configures the device's endpoints ready
@@ -438,11 +427,7 @@ void CDC_Task(void) {
     progress_led++;
 
     if (Command == AVR109_COMMAND_ExitBootloader) {
-        /* We nearly run out the bootloader timeout clock,
-        * leaving just a few hundred milliseconds so the
-        * bootloder has time to respond and service any
-        * subsequent requests */
-        Timeout = TIMEOUT_PERIOD - 500;
+        RunBootloader = false;
 
         /* Re-enable RWW section - must be done here in case
          * user has disabled verification on upload.  */
@@ -525,8 +510,6 @@ void CDC_Task(void) {
         WriteNextResponseByte(SPM_PAGESIZE >> 8);
         WriteNextResponseByte(SPM_PAGESIZE & 0xFF);
     } else if ((Command == AVR109_COMMAND_BlockWrite) || (Command == AVR109_COMMAND_BlockRead)) {
-        // Keep resetting the timeout counter if we're receiving self-programming instructions
-        Timeout = 0;
         /* Delegate the block write/read to a separate function for clarity */
         ReadWriteMemoryBlock(Command);
     }

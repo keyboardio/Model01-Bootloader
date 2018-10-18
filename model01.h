@@ -9,6 +9,8 @@
 #define UPDATE_LED_CMD 0x04
 static uint8_t make_leds_black[] = {0x03,0x00,0x00,0x00};
 
+extern bool RunBootloader;
+
 static uint8_t progress_led = 24; // This is the LED on the "prog" key, bitshifted by 3 bits
 static inline void CheckReprogrammingKey(void) {
 
@@ -35,7 +37,7 @@ static inline void CheckReprogrammingKey(void) {
         if (PINF & _BV(1)) { // If it's still hot, no key was pressed
             // Start the sketch
             PORTC |= _BV(6); // Turn the ATTiny back on
-            StartSketch();
+            RunBootloader = false;
         }
     }
     PORTC |= _BV(6); // Turn the ATTiny back on
@@ -51,18 +53,10 @@ static inline void UpdateProgressLED(void) {
     i2c_send(ATTINY_I2C_ADDR, &led_cmd[0], sizeof(led_cmd));
 }
 
-static inline void EnableLEDs(void) {
-    // Turn on power to the LED net
-    DDRC |= _BV(7);
-    PORTC |= _BV(7);
-}
-
 __attribute__ ((noinline)) static void TurnLEDsOff(void) {
     i2c_send( ATTINY_I2C_ADDR, &make_leds_black[0], sizeof(make_leds_black));
 
 }
-
-
 void InitLEDController() {
     i2c_init();
 
@@ -70,4 +64,13 @@ void InitLEDController() {
     TurnLEDsOff();
 
 }
+
+static inline void LEDs_Init(void) {
+    // Turn on power to the LED net
+    DDRC |= _BV(7);
+    PORTC |= _BV(7);
+    InitLEDController();
+}
+
+
 
